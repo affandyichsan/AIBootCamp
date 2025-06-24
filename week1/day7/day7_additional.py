@@ -5,6 +5,8 @@
 import os
 import json
 import csv
+import argparse
+import sys
 
 FILE_NAME = "tasks.txt"
 
@@ -113,6 +115,60 @@ def main():
             break
         else:
             print("Inalid Choice. Please Try again")
+  
+  
+def cli_mode():
+    parser = argparse.ArgumentParser(description="Simple Task Manager")
+
+    parser.add_argument("--add", metavar="TITLE", help="Add a new task")
+    parser.add_argument("--view", action="store_true", help="View all tasks")
+    parser.add_argument("--done", type=int, metavar="ID", help="Mark task as complete")
+    parser.add_argument("--delete", type=int, metavar="ID", help="Delete a task")
+    parser.add_argument("--export-json", action="store_true", help="Export tasks to JSON")
+    parser.add_argument("--export-csv", action="store_true", help="Export tasks to CSV")
+
+    args = parser.parse_args()
+    tasks = load_tasks()
+
+    if args.add:
+        task_id = max(tasks.keys(), default=0) + 1
+        priority = input("Enter priority: ")
+        tasks[task_id] = {"title": args.add, "status": "incomplete", "priority": priority}
+        print(f"Task '{args.add}' added.")
+        save_tasks(tasks)
+
+    elif args.view:
+        view_tasks(tasks)
+
+    elif args.done is not None:
+        if args.done in tasks:
+            tasks[args.done]["status"] = "complete"
+            print(f"Task '{tasks[args.done]['title']}' marked as complete.")
+            save_tasks(tasks)
+        else:
+            print("Task ID not found.")
+
+    elif args.delete is not None:
+        if args.delete in tasks:
+            deleted_task = tasks.pop(args.delete)
+            print(f"Task '{deleted_task['title']}' deleted.")
+            save_tasks(tasks)
+        else:
+            print("Task ID not found.")
+
+    elif args.export_json:
+        export_to_json(tasks)
+
+    elif args.export_csv:
+        export_to_csv(tasks)
+
+    else:
+        parser.print_help()
+
+  
             
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        cli_mode()
+    else:
+        main()
